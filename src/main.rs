@@ -1,13 +1,15 @@
 use tokio::{
-    net::TcpListener,
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::broadcast
+    net::TcpListener,
+    sync::broadcast,
 };
+
+const SERVER_ADDRESS: &str = "localhost:8080";
 
 #[tokio::main]
 async fn main() {
-    let listener = TcpListener::bind("localhost:8080").await.unwrap();
-    let (tx, mut rx) = broadcast::channel(10);
+    let listener = TcpListener::bind(SERVER_ADDRESS).await.unwrap();
+    let (tx, _) = broadcast::channel(10);
     loop {
         let (mut socket, addr) = listener.accept().await.unwrap();
         let tx = tx.clone();
@@ -28,10 +30,10 @@ async fn main() {
                     result = rx.recv() => {
                         let (msg, other_addr) = result.unwrap();
                         if addr != other_addr {
-                            writer.write_all(msg.as_bytes()).await.unwrap();                            
+                            writer.write_all(msg.as_bytes()).await.unwrap();
                         }
                     }
-                }  
+                }
             }
         });
     }
